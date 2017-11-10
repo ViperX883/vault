@@ -1,19 +1,14 @@
 #include <optional>
 
-#define TRY_IMPL(counter, var, expr...) \
-    auto &&__try_var##counter = (expr); \
+#define TRY(expr...) ({ \
+    auto && __try_var__ = (expr); \
     \
-    if(!__try_var##counter) {\
-        return extract(std::forward<decltype(__try_var##counter)>(__try_var##counter)); \
-    }\
-    \
-    auto var = *std::forward<decltype(__try_var##counter)>(__try_var##counter)
-
-#define TRY_INDR(counter, var, expr...) \
-    TRY_IMPL(counter, var, expr)
-
-#define TRY(var, expr...) \
-    TRY_INDR(__COUNTER__, var, expr)
+    if(!__try_var__) {\
+        return extract(std::forward<decltype(__try_var__)>(__try_var__)); \
+    } \
+\
+    *std::forward<decltype(__try_var__)>(__try_var__); \
+})
 
 template<typename... T>
 std::nullopt_t extract(std::optional<T...> &&) {
@@ -25,7 +20,8 @@ std::optional<int> foo() {
 }
 
 std::optional<std::string> bar() {
-    TRY(const &x, foo());
-    TRY(const &y, foo());
+    auto const &z = TRY(foo());
+    auto const &y = TRY(foo());
+
     return "foo";
 }
